@@ -485,15 +485,17 @@ static void setBandwidth()
 // Seek mode. Pass true to toggle, false to return the current one
 uint8_t seekMode(bool toggle)
 {
-  static uint8_t mode = SEEK_DEFAULT;
-
-  mode = toggle ? (mode == SEEK_DEFAULT ? SEEK_SCHEDULE : SEEK_DEFAULT) : mode;
+  if(toggle)
+  {
+    seekModeIdx = seekModeIdx == SEEK_DEFAULT ? SEEK_SCHEDULE : SEEK_DEFAULT;
+    prefsRequestSave(SAVE_SETTINGS);
+  }
 
   // Use normal seek on FM or if there is no schedule loaded
   if(currentMode == FM || !eibiAvailable() || !clockAvailable())
     return(SEEK_DEFAULT);
 
-  return(mode);
+  return(seekModeIdx);
 }
 
 //
@@ -763,9 +765,17 @@ static void clickMemory(uint8_t idx, bool shortPress)
   if(shortPress)
   {
     // If clicking on an empty memory slot, save to it
-    if(!memories[idx].freq) memories[idx] = newMemory;
+    if(!memories[idx].freq)
+    {
+      memories[idx] = newMemory;
+      setMemoryName(&memories[idx], getStationName());
+    }
     // Otherwise, delete memory slot contents
     else memories[idx].freq = 0;
+
+    sortMemoriesByFrequency();
+    memoryIdx = 0;
+    if(!tuneToMemory(&memories[memoryIdx])) tuneToMemory(&newMemory);
   }
   // On a click, do nothing, slot already activated in doMemory()
   else currentCmd = CMD_NONE;

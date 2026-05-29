@@ -198,6 +198,7 @@ void prefsSave(uint32_t items)
     prefs.putUChar("BLEMode",     bleModeIdx);     // Bluetooth mode
     prefs.putUChar("USBMode",     usbModeIdx);     // USB mode
     prefs.putUChar("ScanSave",    scanSaveIdx);    // Save stations after scan
+    prefs.putUChar("SeekMode",    seekModeIdx);    // Seek mode
 
     // Done with global settings
     prefs.end();
@@ -280,6 +281,7 @@ bool prefsLoad(uint32_t items)
     bleModeIdx     = prefs.getUChar("BLEMode", bleModeIdx);     // Bluetooth mode
     usbModeIdx     = prefs.getUChar("USBMode", usbModeIdx);     // USB mode
     scanSaveIdx    = prefs.getUChar("ScanSave", scanSaveIdx);   // Save stations after scan
+    seekModeIdx    = prefs.getUChar("SeekMode", seekModeIdx);   // Seek mode
 
     // Done with global settings
     prefs.end();

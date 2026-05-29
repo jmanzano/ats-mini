@@ -189,6 +189,7 @@ extern uint8_t bleModeIdx;
 extern uint8_t wifiModeIdx;
 extern uint8_t FmRegionIdx;
 extern uint8_t scanSaveIdx;
+extern uint8_t seekModeIdx;
 
 extern int8_t agcIdx;
 extern int8_t agcNdx;

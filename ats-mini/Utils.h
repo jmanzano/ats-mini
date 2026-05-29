@@ -36,6 +36,7 @@ void clockRefreshTime();
 
 // Check if given memory entry belongs to a band
 bool isMemoryInBand(const Band *band, const Memory *memory);
+bool setMemoryName(Memory *memory, const char *stationName, bool overwrite = false);
 
 // Helpers to convert from/to Hz
 uint16_t freqFromHz(uint32_t freq, uint8_t mode);
@@ -44,5 +45,6 @@ uint32_t freqToHz(uint16_t freq, uint8_t mode);
 
 // Check if given frequency belongs to a band
 bool isFreqInBand(const Band *band, uint16_t freq);
+void sortMemoriesByFrequency();
 
 #endif // UTILS_H

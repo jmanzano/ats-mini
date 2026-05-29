@@ -412,6 +412,57 @@ bool isMemoryInBand(const Band *band, const Memory *memory)
 }
 
 //
+// Save station name into memory slot.
+// Returns true if a non-empty name was written.
+//
+bool setMemoryName(Memory *memory, const char *stationName, bool overwrite)
+{
+  if(!memory || !stationName) return(false);
+  if(!overwrite && memory->name[0]) return(false);
+
+  if((uint8_t)stationName[0] == 0xFF) stationName++;
+
+  uint8_t i = 0;
+  while(*stationName && i < sizeof(memory->name) - 1)
+  {
+    char c = *stationName++;
+    if((uint8_t)c < 32) continue;
+    memory->name[i++] = c;
+  }
+  memory->name[i] = '\0';
+
+  return(i > 0);
+}
+
+//
+// Sort memories by ascending frequency (empty slots go last).
+//
+void sortMemoriesByFrequency()
+{
+  int total = getTotalMemories();
+
+  for(int i=0 ; i<total-1 ; i++)
+  {
+    for(int j=i+1 ; j<total ; j++)
+    {
+      uint32_t fi = memories[i].freq;
+      uint32_t fj = memories[j].freq;
+      bool swap = false;
+
+      if(!fi && fj) swap = true;             // empty -> end
+      else if(fi && fj && fi > fj) swap = true;
+
+      if(swap)
+      {
+        Memory tmp = memories[i];
+        memories[i] = memories[j];
+        memories[j] = tmp;
+      }
+    }
+  }
+}
+
+//
 // Get S-level signal strength from RSSI value
 //
 int getStrength(int rssi)

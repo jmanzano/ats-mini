@@ -35,6 +35,20 @@ static uint8_t  scanMaxSNR;
 static inline uint8_t min(uint8_t a, uint8_t b) { return(a<b? a:b); }
 static inline uint8_t max(uint8_t a, uint8_t b) { return(a>b? a:b); }
 
+static bool namesMatch(const char *a, const char *b)
+{
+  if(!a || !b || !a[0] || !b[0]) return(false);
+
+  for(; *a && *b ; a++, b++)
+  {
+    char ca = *a >= 'A' && *a <= 'Z' ? *a - 'A' + 'a' : *a;
+    char cb = *b >= 'A' && *b <= 'Z' ? *b - 'A' + 'a' : *b;
+    if(ca != cb) return(false);
+  }
+
+  return(*a == '\0' && *b == '\0');
+}
+
 float scanGetRSSI(uint16_t freq)
 {
   // Input frequency must be in range of existing data
@@ -204,12 +218,24 @@ uint8_t scanStoreToMemory()
   for(uint8_t i=0 ; i<candidateCount ; i++)
   {
     uint32_t freqHz = freqToHz(candidates[i].freq, currentMode);
+    char candidateName[sizeof(memories[0].name)] = {0};
     bool exists = false;
     int8_t slot = -1;
+
+    // Populate predictable station names (EiBi / known frequencies).
+    identifyFrequency(candidates[i].freq);
+    Memory tmp = {0};
+    setMemoryName(&tmp, getStationName(), true);
+    if(tmp.name[0]) memcpy(candidateName, tmp.name, sizeof(tmp.name));
 
     for(int j=0 ; j<getTotalMemories() ; j++)
     {
       if(memories[j].freq == freqHz && memories[j].band == bandIdx && memories[j].mode == currentMode)
+      {
+        exists = true;
+        break;
+      }
+      if(candidateName[0] && memories[j].mode == currentMode && namesMatch(memories[j].name, candidateName))
       {
         exists = true;
         break;
@@ -223,8 +249,13 @@ uint8_t scanStoreToMemory()
     memories[slot].band = bandIdx;
     memories[slot].mode = currentMode;
     memset(memories[slot].name, 0, sizeof(memories[slot].name));
+    if(candidateName[0]) setMemoryName(&memories[slot], candidateName, true);
     saved++;
   }
+
+  // Restore current station info after temporary name lookups.
+  identifyFrequency(currentFrequency + currentBFO / 1000);
+  if(saved) sortMemoriesByFrequency();
 
   return(saved);
 }
