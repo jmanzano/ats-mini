@@ -9,6 +9,7 @@
 
 #define SCAN_POLL_TIME    10 // Tuning status polling interval (msecs)
 #define SCAN_POINTS      200 // Number of frequencies to scan
+#define SCAN_CANDIDATES   32 // Max detected station candidates
 
 #define SCAN_OFF    0   // Scanner off, no data
 #define SCAN_RUN    1   // Scanner running
@@ -154,4 +155,76 @@ void scanRun(uint16_t centerFreq, uint16_t step)
   muteOn(MUTE_TEMP, false);
   // Restore tuning delay
   rx.setMaxDelaySetFrequency(TUNE_DELAY_DEFAULT);
+}
+
+//
+// Save scanned station candidates to memory slots.
+// Returns number of slots written.
+//
+uint8_t scanStoreToMemory()
+{
+  if(scanStatus != SCAN_DONE || scanCount < 3) return(0);
+
+  struct Candidate
+  {
+    uint16_t freq;
+    uint16_t score;
+  } candidates[SCAN_CANDIDATES];
+
+  uint8_t candidateCount = 0;
+  uint8_t minSnr = currentMode == FM ? 8 : 4;
+  uint8_t minRssi = scanMinRSSI + (currentMode == FM ? 6 : 4);
+
+  for(uint16_t i=1 ; i+1<scanCount ; i++)
+  {
+    uint8_t rssi = scanData[i].rssi;
+    uint8_t snr = scanData[i].snr;
+
+    // Keep only local maxima above minimal quality thresholds.
+    if(rssi < minRssi || snr < minSnr) continue;
+    if(rssi < scanData[i-1].rssi || rssi <= scanData[i+1].rssi) continue;
+
+    uint16_t score = (uint16_t)rssi + (uint16_t)snr * 3;
+    int insertAt = candidateCount;
+
+    while(insertAt>0 && candidates[insertAt-1].score < score)
+    {
+      if(insertAt < SCAN_CANDIDATES) candidates[insertAt] = candidates[insertAt-1];
+      insertAt--;
+    }
+
+    if(insertAt >= SCAN_CANDIDATES) continue;
+
+    candidates[insertAt].freq = scanStartFreq + scanStep * i;
+    candidates[insertAt].score = score;
+    if(candidateCount < SCAN_CANDIDATES) candidateCount++;
+  }
+
+  uint8_t saved = 0;
+  for(uint8_t i=0 ; i<candidateCount ; i++)
+  {
+    uint32_t freqHz = freqToHz(candidates[i].freq, currentMode);
+    bool exists = false;
+    int8_t slot = -1;
+
+    for(int j=0 ; j<getTotalMemories() ; j++)
+    {
+      if(memories[j].freq == freqHz && memories[j].band == bandIdx && memories[j].mode == currentMode)
+      {
+        exists = true;
+        break;
+      }
+      if(slot<0 && !memories[j].freq) slot = j;
+    }
+
+    if(exists || slot<0) continue;
+
+    memories[slot].freq = freqHz;
+    memories[slot].band = bandIdx;
+    memories[slot].mode = currentMode;
+    memset(memories[slot].name, 0, sizeof(memories[slot].name));
+    saved++;
+  }
+
+  return(saved);
 }

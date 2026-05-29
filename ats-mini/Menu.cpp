@@ -6,6 +6,7 @@
 #include "EIBI.h"
 #include "BleMode.h"
 #include "Menu.h"
+#include "Storage.h"
 
 //
 // Bands Menu
@@ -119,13 +120,14 @@ static const char *menu[] =
 #define MENU_UI           6
 #define MENU_ZOOM         7
 #define MENU_SCROLL       8
-#define MENU_SLEEP        9
-#define MENU_SLEEPMODE    10
-#define MENU_LOADEIBI     11
-#define MENU_USBMODE      12
-#define MENU_BLEMODE      13
-#define MENU_WIFIMODE     14
-#define MENU_ABOUT        15
+#define MENU_SCANSAVE     9
+#define MENU_SLEEP        10
+#define MENU_SLEEPMODE    11
+#define MENU_LOADEIBI     12
+#define MENU_USBMODE      13
+#define MENU_BLEMODE      14
+#define MENU_WIFIMODE     15
+#define MENU_ABOUT        16
 
 
 int8_t settingsIdx = MENU_BRIGHTNESS;
@@ -141,6 +143,7 @@ static const char *settings[] =
   "UI Layout",
   "Zoom Menu",
   "Scroll Dir.",
+  "Scan Save",
   "Sleep",
   "Sleep Mode",
   "Load EiBi",
@@ -294,6 +297,12 @@ int getTotalBleModes() { return(ITEM_COUNT(bleModeDesc)); }
 uint8_t wifiModeIdx = NET_OFF;
 static const char *wifiModeDesc[] =
 { "Off", "AP Only", "AP+Connect", "Connect", "Sync Only" };
+
+//
+// Scan Save Menu
+//
+static const char *scanSaveDesc[] =
+{ "Off", "On" };
 
 //
 // Step Menu
@@ -557,6 +566,18 @@ static void clickScan(bool shortPress)
     drawScreen();
     drawMessage("Scanning...");
     scanRun(currentFrequency, 10);
+    if(scanSaveIdx)
+    {
+      uint8_t saved = scanStoreToMemory();
+      if(saved)
+      {
+        char msg[16];
+        sprintf(msg, "Saved %d", saved);
+        drawMessage(msg);
+        prefsRequestSave(SAVE_MEMORIES, true);
+      }
+      else drawMessage("Saved 0");
+    }
   }
   else currentCmd = CMD_NONE;
 }
@@ -674,6 +695,11 @@ static void doZoom(int16_t enc)
 static void doScrollDir(int16_t enc)
 {
   scrollDirection = (scrollDirection == 1) ? -1 : 1;
+}
+
+static void doScanSave(int16_t enc)
+{
+  scanSaveIdx = wrap_range(scanSaveIdx, enc, 0, LAST_ITEM(scanSaveDesc));
 }
 
 uint8_t doAbout(int16_t enc)
@@ -922,6 +948,7 @@ static void clickSettings(int cmd, bool shortPress)
     case MENU_RDS:        currentCmd = CMD_RDS;        break;
     case MENU_ZOOM:       currentCmd = CMD_ZOOM;       break;
     case MENU_SCROLL:     currentCmd = CMD_SCROLL;     break;
+    case MENU_SCANSAVE:   currentCmd = CMD_SCANSAVE;   break;
     case MENU_SLEEP:      currentCmd = CMD_SLEEP;      break;
     case MENU_SLEEPMODE:  currentCmd = CMD_SLEEPMODE;  break;
     case MENU_UTCOFFSET:  currentCmd = CMD_UTCOFFSET;  break;
@@ -972,6 +999,7 @@ bool doSideBar(uint16_t cmd, int16_t enc, int16_t enca)
     case CMD_WIFIMODE:   doWiFiMode(scrollDirection * enc);break;
     case CMD_ZOOM:       doZoom(enc);break;
     case CMD_SCROLL:     doScrollDir(enc);break;
+    case CMD_SCANSAVE:   doScanSave(scrollDirection * enc);break;
     case CMD_UTCOFFSET:  doUTCOffset(scrollDirection * enc);break;
     case CMD_SQUELCH:    doSquelch(enca);break;
     case CMD_ABOUT:      doAbout(enc);break;
@@ -1623,6 +1651,30 @@ static void drawScrollDir(int x, int y, int sx)
     spr.fillTriangle(39+x+(sx/2)-5, 85+y, 39+x+(sx/2)+5, 85+y, 39+x+(sx/2), 85+y+5, TH.menu_param);
 }
 
+static void drawScanSave(int x, int y, int sx)
+{
+  drawCommon(settings[MENU_SCANSAVE], x, y, sx, true);
+
+  int count = ITEM_COUNT(scanSaveDesc);
+  for(int i=-2 ; i<3 ; i++)
+  {
+    if(i==0) {
+      drawZoomedMenu(scanSaveDesc[abs((scanSaveIdx+count+i)%count)]);
+      spr.setTextColor(TH.menu_hl_text, TH.menu_hl_bg);
+    } else {
+      spr.setTextColor(TH.menu_item);
+    }
+
+    // Prevent repeats for short menus
+    if (count < 5 && ((scanSaveIdx+i) < 0 || (scanSaveIdx+i) >= count)) {
+      continue;
+    }
+
+    spr.setTextDatum(MC_DATUM);
+    spr.drawString(scanSaveDesc[abs((scanSaveIdx+count+i)%count)], 40+x+(sx/2), 64+y+(i*16), 2);
+  }
+}
+
 static void drawInfo(int x, int y, int sx)
 {
   char text[16];
@@ -1730,6 +1782,7 @@ void drawSideBar(uint16_t cmd, int x, int y, int sx)
     case CMD_WIFIMODE:   drawWiFiMode(x, y, sx);   break;
     case CMD_ZOOM:       drawZoom(x, y, sx);       break;
     case CMD_SCROLL:     drawScrollDir(x, y, sx);  break;
+    case CMD_SCANSAVE:   drawScanSave(x, y, sx);   break;
     case CMD_UTCOFFSET:  drawUTCOffset(x, y, sx);  break;
     case CMD_SQUELCH:    drawSquelch(x, y, sx);    break;
     default:             drawInfo(x, y, sx);       break;

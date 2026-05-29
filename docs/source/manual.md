@@ -56,7 +56,7 @@ The menu can be invoked by clicking the encoder button and is closed automatical
 * **Volume** - 0 (silent) ... 63 (max). The headphone volume level can be low (compared to the built-in speaker) due to limitation of the initial hardware design. Use short press to mute/unmute.
 * **Step** - Tuning step (not every step is available on every band and mode).
 * **Seek** - Seek up or down on AM/FM, normal tuning on LSB/USB (hardware seek function is not supported by SI4732 on SSB). Rotate or click the encoder to stop the seek. Use short press to switch between the seek and [schedule](#schedule) modes. Use press and rotate for manual fine tuning.
-* **Scan** - Scan a frequency range and plot the RSSI (S) and SNR (N) graphs (unfortunately, these metrics are almost meaningless in SSB modes due to SI4732 patch limitations). Both graphs are normalized to 0.0 - 1.0 range. While the Scan mode is active, short press the encoder for 0.5 seconds to rescan. To abort a running scan process click or rotate the encoder.
+* **Scan** - Scan a frequency range and plot the RSSI (S) and SNR (N) graphs (unfortunately, these metrics are almost meaningless in SSB modes due to SI4732 patch limitations). Both graphs are normalized to 0.0 - 1.0 range. While the Scan mode is active, short press the encoder for 0.5 seconds to rescan. To abort a running scan process click or rotate the encoder. When **Scan Save** is enabled, each scan also stores detected stations into free memory slots.
 * **Memory** - 99 slots to store favorite frequencies. Short press (>0.5 sec) on an empty slot to store the current frequency, short press to erase a slot, switch between stored slots by rotating the encoder, click to exit the menu. It is also possible to edit the memory slots via [remote control](remote.md) or via the [web based tool](memory.md) in Google Chrome.
 * **Squelch** - mute the speaker when the selected RSSI (dBuV) or SNR (dB) level is lower than the defined threshold. The setting is saved separately for each mode (FM, LSB, USB, AM). When Off, short press the encoder button to switch between RSSI and SNR. When enabled, short press turns squelch Off. Unlikely to work in SSB mode.
 * **Bandwidth** - Selects the bandwidth of the channel filter.
@@ -76,6 +76,7 @@ The menu can be invoked by clicking the encoder button and is closed automatical
 * **UI Layout** - Alternative UI layouts. For now there is just one alternative UI with large S-meter and S/N-meter.
 * **Zoom Menu** - Display the currently selected menu item using a larger font (accessibility option).
 * **Scroll Dir.** - Menu scroll direction for clockwise encoder turn.
+* **Scan Save** - Automatically save detected stations to free memory slots after each scan (Off/On).
 * **Sleep** - Automatic sleep interval in seconds (0 - disabled).
 * **Sleep Mode** - Locked - lock the encoder rotation during sleep; Unlocked - allow tuning the frequency in sleep mode; CPU Sleep - the maximum power saving mode. With the display being on, default brightness, and Wi-Fi the power consumption is about 170mA, without Wi-Fi 100mA, Locked/Unlocked modes draw about 70mA, CPU sleep mode draws about 40mA.
 * **Load EiBi** - download the EiBi [schedule](#schedule) (requires Wi-Fi internet connection).

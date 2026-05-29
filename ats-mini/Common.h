@@ -188,6 +188,7 @@ extern uint8_t usbModeIdx;
 extern uint8_t bleModeIdx;
 extern uint8_t wifiModeIdx;
 extern uint8_t FmRegionIdx;
+extern uint8_t scanSaveIdx;
 
 extern int8_t agcIdx;
 extern int8_t agcNdx;
@@ -214,6 +215,7 @@ bool drawBattery(int x, int y);
 void scanRun(uint16_t centerFreq, uint16_t step);
 float scanGetRSSI(uint16_t freq);
 float scanGetSNR(uint16_t freq);
+uint8_t scanStoreToMemory();
 
 // Station.c
 const char *getStationName();
